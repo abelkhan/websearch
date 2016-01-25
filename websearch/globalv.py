@@ -6,3 +6,5 @@
 collection_user = None
 collection_file = None
 collection_text = None
+
+urlname = 'http://139.129.96.47/'

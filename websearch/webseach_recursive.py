@@ -16,6 +16,14 @@ import time
 
 collection_key = None
 
+def ingoreurl(url):
+    count = 0
+    for ch in url:
+        if ch == '/':
+            count += 1
+
+    return count > 4
+
 def seach(urllist):
     gethtml.process_url_list = []
 
@@ -23,12 +31,11 @@ def seach(urllist):
         if keyurl is not None:
             for key1, urllist in keyurl.iteritems():
                 for url in urllist:
-                    #print url
                     if url[len(url) - 1] == '/':
                         url = url[0:-1]
-                        #print url
 
-                    #print url
+                    if ingoreurl(url):
+                        continue
 
                     urlinfo = gethtml.process_url(url)
 
@@ -52,17 +59,20 @@ def seach(urllist):
                             key += c
                         gethtml.collection.update({'key':key, 'url':url}, {'$set':{'key':key, 'url':url, 'timetmp':time.time()}}, True)
 
+
+                        if list is not None:
+                            process_urllist(list)
+
                         if keyurl1 is not None:
                             process_keyurl(keyurl1)
 
     def process_urllist(url_list):
         for url in url_list:
-            #print url
             if url[len(url) - 1] == '/':
                 url = url[0:-1]
-                #print url
 
-            #print url
+            if ingoreurl(url):
+                continue
 
             urlinfo = gethtml.process_url(url)
 
@@ -77,21 +87,16 @@ def seach(urllist):
             if keyurl is not None:
                 process_keyurl(keyurl)
 
-            time.sleep(0.1)
-
     for url in urllist:
         print url, "root url"
 
         urlinfo = gethtml.process_url(url)
 
         if urlinfo is None or isinstance(urlinfo, str):
-            print "error root url",url
+            print "error root url",url, urlinfo
             continue
 
         list, keyurl = urlinfo
-
-        #print list
-        #print keyurl
 
         try:
             process_urllist(list)
@@ -101,11 +106,9 @@ def seach(urllist):
             import traceback
             traceback.print_exc()
 
-urllist = ["http://www.baidu.com",
-           "http://www.google.com",
-           "http://www.xitek.com/",
-           "http://www.zol.com.cn/",
-           "http://www.weiqiok.com/",
+urllist = ["http://www.xitek.com",
+           "http://www.zol.com.cn",
+           "http://www.weiqiok.com",
            "http://www.cnblogs.com",
            "http://www.csdn.net",
            "http://www.cppblog.com",
@@ -123,7 +126,9 @@ urllist = ["http://www.baidu.com",
            "http://www.163.com",
            "http://jj.hbtv.com.cn",
            "https://www.taobao.com",
+           "http://www.baidu.com",
            "http://www.jd.com",
+           "http://www.google.com",
            "http://www.suning.com",
            "http://jiadian.gome.com.cn"]
 

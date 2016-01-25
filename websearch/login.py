@@ -16,13 +16,17 @@ def register_user(name, key):
 
 def find_user(name):
 	try:
-		c = globalv.collection_user.find_one(name)
-		return c
+		print name,globalv.collection_user
+		c = globalv.collection_user.find({"username":name})
+		print c.count(), name
+		return c[0]
 	except:
 		return None
 
 def longin_user(c, name, key):
+	print c["username"], c["key"], "login"
 	if name == c["username"]:
 		if key == c["key"]:
+			print "login"
 			return True
 	return False

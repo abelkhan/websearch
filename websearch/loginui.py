@@ -7,6 +7,7 @@ sys.path.append('../')
 from plask import *
 from check import *
 from login import *
+import globalv
 
 def on_get_check(p):
 	num,text = random_check()
@@ -20,11 +21,13 @@ def on_check(p):
 	name = p["name"]
 	key = p["key"]
 	csession = pysession.session[p["sid"]]
-	if not check_num(csession["login_check"], text):
+	if not check_num(csession["login_check"], int(text)):
+		print "checkend", csession["login_check"], text
 		return {"checkend":False}
 
 	c = find_user(name)
 	if (c == None):
+		print "userisnotdefine"
 		return {"userisnotdefine":True}
 
 	return {"loginend":longin_user(c, name, key)}
@@ -47,14 +50,9 @@ def on_register(p):
 def titleui(p):
 	b = pycontainer('title1', pyhtmlstyle.margin_auto, p)
 	b.set_location(1, 1)
-	#b.set_size(656, 0)
-	#b.set_newline()
-
-	#title = pytext("the darkforce is also the force", "title2", pyhtmlstyle.float_left, b)
-	#title.set_font_color((122,122,152))
 
 	title1 = registerbtn(b)
-	evc = uievent('http://139.129.96.47/', title1, pyelement.onclick)
+	evc = uievent(globalv.urlname, title1, pyelement.onclick)
 	popreg = rgisterui(p)
 	params = jparams()
 	onsev = on_server_response()
@@ -66,7 +64,7 @@ def titleui(p):
 	title1.register_uievent(evc)
 
 	title2 = loginbtn(b)
-	evc = uievent('http://139.129.96.47/', title2, pyelement.onclick)
+	evc = uievent(globalv.urlname, title2, pyelement.onclick)
 	pop = loginui(p, title1, title2)
 	params = jparams()
 	onsev = on_server_response()
@@ -78,13 +76,13 @@ def titleui(p):
 	title2.register_uievent(evc)
 
 def registerbtn(b):
-	title1 = pytext("注册", "title3", pyhtmlstyle.float_right, b)
+	title1 = pytext("&nbsp;注册", "title3", pyhtmlstyle.float_right, b)
 	title1.set_font_color((122,122,152))
-	ev = uievent('http://139.129.96.47/', title1, pyelement.onmouseover)
+	ev = uievent(globalv.urlname, title1, pyelement.onmouseover)
 	ev.add_call_ui(title1.client_set_font_color((0,0,250)))
 	ev.add_call_ui(title1.client_set_cursor(pyhtmlstyle.pointer))
 	title1.register_uievent(ev)
-	evo = uievent('http://139.129.96.47/', title1, pyelement.onmouseout)
+	evo = uievent(globalv.urlname, title1, pyelement.onmouseout)
 	evo.add_call_ui(title1.client_set_font_color((122,122,152)))
 	evo.add_call_ui(title1.client_set_cursor(pyhtmlstyle.auto))
 	title1.register_uievent(evo)
@@ -94,12 +92,12 @@ def registerbtn(b):
 def loginbtn(b):
 	title2 = pytext("登陆&nbsp;", "title4", pyhtmlstyle.float_right, b)
 	title2.set_font_color((122,122,152))
-	ev = uievent('http://139.129.96.47/', title2, pyelement.onmouseover)
+	ev = uievent(globalv.urlname, title2, pyelement.onmouseover)
 	ev.add_call_ui(title2.client_set_font_color((0,0,250)))
 	ev.add_call_ui(title2.client_set_cursor(pyhtmlstyle.pointer))
 	ev.add_call_ui(title2.client_set_font_color((0,0,250)))
 	title2.register_uievent(ev)
-	evo = uievent('http://139.129.96.47/', title2, pyelement.onmouseout)
+	evo = uievent(globalv.urlname, title2, pyelement.onmouseout)
 	evo.add_call_ui(title2.client_set_font_color((122,122,152)))
 	evo.add_call_ui(title2.client_set_cursor(pyhtmlstyle.auto))
 	title2.register_uievent(evo)
@@ -115,13 +113,13 @@ def rgisterui(p):
 	pclose = pytext("×", "closeui", pyhtmlstyle.float_right, pop)
 	pclose.top = 5
 	pclose.right = 5
-	evunselectclose = uievent('http://139.129.96.47/', pclose, pyelement.onmouseout)
+	evunselectclose = uievent(globalv.urlname, pclose, pyelement.onmouseout)
 	evunselectclose.add_call_ui(pclose.pop_set_cursor(pyhtmlstyle.auto))
 	pclose.register_uievent(evunselectclose)
-	evselectclose = uievent('http://139.129.96.47/', pclose, pyelement.onmouseover)
+	evselectclose = uievent(globalv.urlname, pclose, pyelement.onmouseover)
 	evselectclose.add_call_ui(pclose.pop_set_cursor(pyhtmlstyle.pointer))
 	pclose.register_uievent(evselectclose)
-	evclose = uievent('http://139.129.96.47/', pclose, pyelement.onclick)
+	evclose = uievent(globalv.urlname, pclose, pyelement.onclick)
 	evclose.add_call_ui(pop.close_win())
 	pclose.register_uievent(evclose)
 
@@ -205,7 +203,7 @@ def rgisterui(p):
 	pcheck.left = 108
 	pcheck.bottom = 10
 
-	evchange = uievent('http://139.129.96.47/', pchange, pyelement.onclick)
+	evchange = uievent(globalv.urlname, pchange, pyelement.onclick)
 	params = jparams()
 	onsev = on_server_response()
 	sev = server_event("regchangecheck", params, onsev)
@@ -214,11 +212,11 @@ def rgisterui(p):
 	evchange.add_server_event(sev)
 	pchange.register_uievent(evchange)
 
-	evunselectchange = uievent('http://139.129.96.47/', pchange, pyelement.onmouseout)
+	evunselectchange = uievent(globalv.urlname, pchange, pyelement.onmouseout)
 	evunselectchange.add_call_ui(pchange.pop_set_cursor(pyhtmlstyle.auto))
 	evunselectchange.add_call_ui(pchange.pop_set_text_decoration(pyhtmlstyle.NoneDecoration))
 	pchange.register_uievent(evunselectchange)
-	evselectchange = uievent('http://139.129.96.47/', pchange, pyelement.onmouseover)
+	evselectchange = uievent(globalv.urlname, pchange, pyelement.onmouseover)
 	evselectchange.add_call_ui(pchange.pop_set_cursor(pyhtmlstyle.pointer))
 	evselectchange.add_call_ui(pchange.pop_set_text_decoration(pyhtmlstyle.UnderlineDecoration))
 	pchange.register_uievent(evselectchange)
@@ -233,7 +231,7 @@ def rgisterui(p):
 	preg.bottom = 5
 	preg.left = 160
 
-	evlogin = uievent('http://139.129.96.47/', preg, pyelement.onclick)
+	evlogin = uievent(globalv.urlname, preg, pyelement.onclick)
 	params = jparams()
 	params.append("checktext", pcaptchainput.pop_get_input_text())
 	params.append("name", ptusernameinput.pop_get_input_text())
@@ -243,6 +241,25 @@ def rgisterui(p):
 	sev = server_event("register", params, onsev)
 	sev.add_onevent(on_register)
 	onsev.add_call_if_true(pop.close_win(), "registerend")
+
+	popnotes = pypopup("popnotes", 400, p)
+	pclose = pytext("×", "closeui1", pyhtmlstyle.float_right, popnotes)
+	pclose.top = 5
+	pclose.right = 5
+	evunselectclose = uievent(globalv.urlname, pclose, pyelement.onmouseout)
+	evunselectclose.add_call_ui(pclose.pop_set_cursor(pyhtmlstyle.auto))
+	pclose.register_uievent(evunselectclose)
+	evselectclose = uievent(globalv.urlname, pclose, pyelement.onmouseover)
+	evselectclose.add_call_ui(pclose.pop_set_cursor(pyhtmlstyle.pointer))
+	pclose.register_uievent(evselectclose)
+	evclose = uievent(globalv.urlname, pclose, pyelement.onclick)
+	evclose.add_call_ui(popnotes.close_win())
+	pclose.register_uievent(evclose)
+	ptitle = pytext("用户注册", "userregister1", pyhtmlstyle.float_left, popnotes)
+	ptitle.left = 5
+	ptitle.top = 5
+	ptitle.bottom = 5
+
 	onsev.add_call_if_false(msgbox("校验码错误"), "checkend")
 	onsev.add_call_if_false(msgbox("用户已被注册"), "registerend")
 	evlogin.add_server_event(sev)
@@ -259,13 +276,13 @@ def loginui(p, title1, title2):
 	pclose = pytext("×", "close", pyhtmlstyle.float_right, pop)
 	pclose.top = 5
 	pclose.right = 5
-	evunselectclose = uievent('http://139.129.96.47/', pclose, pyelement.onmouseout)
+	evunselectclose = uievent(globalv.urlname, pclose, pyelement.onmouseout)
 	evunselectclose.add_call_ui(pclose.pop_set_cursor(pyhtmlstyle.auto))
 	pclose.register_uievent(evunselectclose)
-	evselectclose = uievent('http://139.129.96.47/', pclose, pyelement.onmouseover)
+	evselectclose = uievent(globalv.urlname, pclose, pyelement.onmouseover)
 	evselectclose.add_call_ui(pclose.pop_set_cursor(pyhtmlstyle.pointer))
 	pclose.register_uievent(evselectclose)
-	evclose = uievent('http://139.129.96.47/', pclose, pyelement.onclick)
+	evclose = uievent(globalv.urlname, pclose, pyelement.onclick)
 	evclose.add_call_ui(pop.close_win())
 	pclose.register_uievent(evclose)
 	pc = pycontainer('usernamec', pyhtmlstyle.margin_auto, pop)
@@ -285,11 +302,11 @@ def loginui(p, title1, title2):
 	pregister.top = 14
 	pregister.bottom = 10
 	pregister.set_font_color((100, 100, 200))
-	evunselectreg = uievent('http://139.129.96.47/', pregister, pyelement.onmouseout)
+	evunselectreg = uievent(globalv.urlname, pregister, pyelement.onmouseout)
 	evunselectreg.add_call_ui(pregister.pop_set_cursor(pyhtmlstyle.auto))
 	evunselectreg.add_call_ui(pregister.pop_set_text_decoration(pyhtmlstyle.NoneDecoration))
 	pregister.register_uievent(evunselectreg)
-	evselectreg = uievent('http://139.129.96.47/', pregister, pyelement.onmouseover)
+	evselectreg = uievent(globalv.urlname, pregister, pyelement.onmouseover)
 	evselectreg.add_call_ui(pregister.pop_set_cursor(pyhtmlstyle.pointer))
 	evselectreg.add_call_ui(pregister.pop_set_text_decoration(pyhtmlstyle.UnderlineDecoration))
 	pregister.register_uievent(evselectreg)
@@ -310,11 +327,11 @@ def loginui(p, title1, title2):
 	pfind.top = 14
 	pfind.bottom = 10
 	pfind.set_font_color((100, 100, 200))
-	evunselectfind = uievent('http://139.129.96.47/', pfind, pyelement.onmouseout)
+	evunselectfind = uievent(globalv.urlname, pfind, pyelement.onmouseout)
 	evunselectfind.add_call_ui(pfind.pop_set_cursor(pyhtmlstyle.auto))
 	evunselectfind.add_call_ui(pfind.pop_set_text_decoration(pyhtmlstyle.NoneDecoration))
 	pfind.register_uievent(evunselectfind)
-	evselectfind = uievent('http://139.129.96.47/', pfind, pyelement.onmouseover)
+	evselectfind = uievent(globalv.urlname, pfind, pyelement.onmouseover)
 	evselectfind.add_call_ui(pfind.pop_set_text_decoration(pyhtmlstyle.UnderlineDecoration))
 	evselectfind.add_call_ui(pfind.pop_set_cursor(pyhtmlstyle.pointer))
 	pfind.register_uievent(evselectfind)
@@ -347,7 +364,7 @@ def loginui(p, title1, title2):
 	pcheck.left = 108
 	pcheck.bottom = 10
 
-	evchange = uievent('http://139.129.96.47/', pchange, pyelement.onclick)
+	evchange = uievent(globalv.urlname, pchange, pyelement.onclick)
 	params = jparams()
 	onsev = on_server_response()
 	sev = server_event("changecheck", params, onsev)
@@ -356,11 +373,11 @@ def loginui(p, title1, title2):
 	evchange.add_server_event(sev)
 	pchange.register_uievent(evchange)
 
-	evunselectchange = uievent('http://139.129.96.47/', pchange, pyelement.onmouseout)
+	evunselectchange = uievent(globalv.urlname, pchange, pyelement.onmouseout)
 	evunselectchange.add_call_ui(pchange.pop_set_cursor(pyhtmlstyle.auto))
 	evunselectchange.add_call_ui(pchange.pop_set_text_decoration(pyhtmlstyle.NoneDecoration))
 	pchange.register_uievent(evunselectchange)
-	evselectchange = uievent('http://139.129.96.47/', pchange, pyelement.onmouseover)
+	evselectchange = uievent(globalv.urlname, pchange, pyelement.onmouseover)
 	evselectchange.add_call_ui(pchange.pop_set_cursor(pyhtmlstyle.pointer))
 	evselectchange.add_call_ui(pchange.pop_set_text_decoration(pyhtmlstyle.UnderlineDecoration))
 	pchange.register_uievent(evselectchange)
@@ -375,7 +392,7 @@ def loginui(p, title1, title2):
 	plogin.bottom = 5
 	plogin.left = 160
 
-	evlogin = uievent('http://139.129.96.47/', plogin, pyelement.onclick)
+	evlogin = uievent(globalv.urlname, plogin, pyelement.onclick)
 	params = jparams()
 	params.append("checktext", pcaptchainput.pop_get_input_text())
 	params.append("name", ptusernameinput.pop_get_input_text())

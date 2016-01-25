@@ -8,6 +8,7 @@ from plask import *
 from loginui import *
 import pymongo
 import usesearch
+import globalv
 from webget import gethtml
 
 def add_title():
@@ -89,19 +90,33 @@ def on_search(p):
 def layout():
     app = plaskapp('0.0.0.0', 80)
 
-    p = pypage('websearch', 'http://139.129.96.47/', pyhtmlstyle.margin_auto)
+    p = pypage('websearch', globalv.urlname, pyhtmlstyle.margin_auto)
     p.add_page_route('/')
 
-    cb = pycontainer('cb', pyhtmlstyle.margin_auto, p)
+    cb = pycontainer('cb', pyhtmlstyle.float_left, p)
     cb.set_size(1000, 0)
     cb.set_location(0, 0)
 
     mj = pycontainer('mj', pyhtmlstyle.float_left, p)
-    mj.set_location(1110, 0)
-    mj.set_border_style(pyhtmlstyle.solid)
-    mj.set_left_border_style(pyhtmlstyle.solid)
+    #mj.set_location(1110, 1)
+    mj.top = 60
+    mj.left = 70
+    mj.set_size(400, 0)
 
-    pnotes = pytext("Abelkhan 致力于提供开源的网页搜索服务", "notes123", pyhtmlstyle.margin_auto, mj)
+    pnotes = pytext("Abelkhan", "notes123", pyhtmlstyle.margin_auto, mj)
+    pnotes.set_font_size(200)
+    pnotes = pytext("开源网页搜索引擎，致力于为用户提供优秀的搜索体验。", "notes1234", pyhtmlstyle.margin_auto, mj)
+    pnotes.top = 3
+    pnotes = pytext("项目托管地址:", "notes12345", pyhtmlstyle.margin_auto, mj)
+    pnotes.top = 20
+    plink = pylink("https://github.com/abelkhan/websearch.git", "https://github.com/abelkhan/websearch.git", "link1", pyhtmlstyle.margin_auto, mj)
+    plink.top = 3
+    pnotes = pytext("作者: 吴 铭 ", "notes123456", pyhtmlstyle.margin_auto, mj)
+    pnotes.top = 20
+    pnotes = pytext("手机: 15618972863", "notes1234568", pyhtmlstyle.margin_auto, mj)
+    pnotes.top = 3
+    pnotes = pytext("QQ: 451517996", "notes1234567", pyhtmlstyle.margin_auto, mj)
+    pnotes.top = 3
 
     titleui(cb)
 
@@ -126,7 +141,7 @@ def layout():
     button = pybutton('千度吧', 'button', pyhtmlstyle.float_left, c)
     button.set_size(80, 30)
     button.set_location(3, 0)
-    ev = uievent('http://139.129.96.47/', button, pyelement.onclick)
+    ev = uievent(globalv.urlname, button, pyelement.onclick)
     params = jparams()
     params.append("input", titletitle.client_get_input_text())
     params.append("index", '0')
@@ -152,7 +167,7 @@ def layout():
     button.set_size(80, 30)
     button.bottom = 40
     button.set_visibility(False)
-    ev = uievent('http://139.129.96.47/', button, pyelement.onclick)
+    ev = uievent(globalv.urlname, button, pyelement.onclick)
     params = jparams()
     params.append("input", titletitle.client_get_input_text())
     params.append("index", '0')
@@ -173,6 +188,11 @@ if __name__ == '__main__':
     db = conn.webseach
     usesearch.collection_page = db.webpage
     usesearch.collection_key = db.keys
+
+    globalv.collection_user = db.user
+    globalv.collection_file = db.file
+    globalv.collection_text = db.text
+
     print usesearch.collection_page,usesearch.collection_key
     gethtml.collection = db.webpage
     gethtml.collection_url_profile = db.urlprofile
