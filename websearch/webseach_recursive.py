@@ -5,7 +5,7 @@
 
 import sys
 reload(sys)
-sys.setdefaultencoding('utf8')
+sys.setdefaultencoding('utf-8')
 
 sys.path.append('../')
 
@@ -13,6 +13,7 @@ from webget import gethtml
 import pymongo
 from doclex import doclex
 import time
+import chardet
 
 collection_key = None
 
@@ -48,7 +49,16 @@ def seach(urllist):
                             if c >= 'A' and c <= 'Z':
                                 c = c.lower()
                             key += c
-                        gethtml.collection.update({'key':key, 'url':url}, {'$set':{'key':key, 'url':url, 'timetmp':time.time()}}, True)
+                        try:
+                            encodingdate = chardet.detect(key)
+                            if encodingdate['encoding']:
+                                key = unicode(key, encodingdate['encoding'])
+                            else:
+                                key = unicode(key, 'utf-8')
+                            gethtml.collection.update({'key':key, 'url':url}, {'$set':{'key':key, 'url':url, 'timetmp':time.time(), 'weight':3}}, True)
+                        except:
+                            import traceback
+                            traceback.print_exc()
                     else:
                         list, keyurl1 = urlinfo
 
@@ -57,7 +67,16 @@ def seach(urllist):
                             if c >= 'A' and c <= 'Z':
                                 c = c.lower()
                             key += c
-                        gethtml.collection.update({'key':key, 'url':url}, {'$set':{'key':key, 'url':url, 'timetmp':time.time()}}, True)
+                        try:
+                            encodingdate = chardet.detect(key)
+                            if encodingdate['encoding']:
+                                key = unicode(key, encodingdate['encoding'])
+                            else:
+                                key = unicode(key, 'utf-8')
+                            gethtml.collection.update({'key':key, 'url':url}, {'$set':{'key':key, 'url':url, 'timetmp':time.time(), 'weight':3}}, True)
+                        except:
+                            import traceback
+                            traceback.print_exc()
 
 
                         if list is not None:

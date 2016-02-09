@@ -5,33 +5,46 @@
 
 import sys
 reload(sys)
-sys.setdefaultencoding('utf8')
+sys.setdefaultencoding('utf-8')
 
 import chardet
 
 def tolower(str1):
-    key = ""
+    encoding = chardet.detect(str1)
+    if encoding['encoding']:
+        str1 = unicode(str1, encoding['encoding'])
+    else:
+        str1 = unicode(str1, 'utf-8')
+
+    key = u""
     for c in str1:
-        if c >= 'A' and c <= 'Z':
+        if c >= u'A' and c <= u'Z':
             c = c.lower()
         key += c
-    return key
+
+    return key.encode('utf-8', 'ignore')
 
 def delspace(str):
+    encoding = chardet.detect(str)
+    if encoding['encoding']:
+        str = unicode(str, encoding['encoding'])
+    else:
+        str = unicode(str, 'utf-8')
+
     i = 0
     while True:
         if i >= len(str):
             break
 
-        if str[i] == ' ' or str[i] == '\n' or str[i] == '\r' or str[i] == ' ' or str[i] == '\t' or str[i] == '\0':
-            if i == 0 or str[i-1] == ' ':
+        if str[i] == u' ' or str[i] == u'\n' or str[i] == u'\r' or str[i] == u' ' or str[i] == u'\t' or str[i] == u'\0':
+            if i == 0 or str[i-1] == u' ':
                 str = str[0:i] + str[i+1:]
                 continue
 
         if i < len(str):
             i += 1
 
-    return str
+    return str.encode('utf-8', 'ignore')
 
 def splityspace(keys):
     return keys.split(' ')
@@ -39,6 +52,23 @@ def splityspace(keys):
 punctuations = [u'.',u',',u'[',u']',u'{',u'}',u'"',u'\'',u';',u':',u'<',u'>',u'!',u'?',u'(',u'（',u'）',u')',u'*',u'&',u'^',u'%',u'$',u'#',u'@',u'!',u'~',u'`',u'☆',
                 u'，',u'》',u'。',u'《',u'？',u'/',u'：',u'；',u'“',u'‘',u'{',u'}',u'、',u'|',u'\r',u'\n',u'\0',u'\t',u' ',u'   ',u'+',u'-',u'=',u'_',u'【', u'】',
                 u'　', u'★',u'　',u'！',u'·']
+
+def isinviald(str):
+    encoding = chardet.detect(str)
+    if encoding['encoding']:
+        str = unicode(str, encoding['encoding'])
+    else:
+        str = unicode(str, 'utf-8')
+
+    for c in str:
+        if c not in punctuations:
+            return False
+    if str == u'':
+        return True
+
+    str = str.encode('utf-8', 'ignore')
+
+    return True
 
 def inviald_key(key):
     for ch in key:
@@ -56,10 +86,15 @@ def process_key(key):
     return str
 
 def vaguesplit(str):
+    str = delspace(str)
+
+    encoding = chardet.detect(str)
+    if encoding['encoding']:
+        str = unicode(str, encoding['encoding'])
+    else:
+        str = unicode(str, 'utf-8')
+
     words = []
-
-    delspace(str)
-
     for i in range(len(str)):
         if str[i] not in punctuations:
             words.append(str[i])
@@ -76,12 +111,16 @@ def vaguesplit(str):
         if i < len(str) - 3 and str[i] not in punctuations and str[i+1] not in punctuations and str[i+2] not in punctuations and str[i+3] not in punctuations:
             words.append(str[i:i+4])
 
-    return words
+    doclist = []
+    for str in words:
+        doclist.append(str.encode('utf-8', 'ignore'))
+
+    return doclist
 
 def simplesplit(str):
     try:
         encoding = chardet.detect(str)
-        if encoding['encoding'] is not None:
+        if encoding['encoding']:
             str = unicode(str, encoding['encoding'])
         else:
             str = unicode(str, 'utf-8')
@@ -97,46 +136,37 @@ def simplesplit(str):
                 key += ch
         if key != u'':
             keys.append(key)
+
+        words = []
+        for key in keys:
+            words.append(key.encode('utf-8', 'ignore'))
+        keys = words
+
         if len(keys) == 0:
             key = process_key(str)
             if key != u'':
                 keys.append(key)
 
-            keys.extend(vaguesplit(key))
+            words = []
+            for key in keys:
+                words.append(key.encode('utf-8', 'ignore'))
+            keys = words
+
+            keys.extend(vaguesplit(key.encode('utf-8', 'ignore')))
 
         return keys
     except:
         import traceback
         traceback.print_exc()
 
-def simlesplit1(str):
-    try:
-        keys = []
-        key = u''
-        for ch in str:
-            if ch in punctuations:
-                if not inviald_key(key):
-                    keys.append(key)
-                    key = u''
-            else:
-                key += ch
-        if key != u'':
-            keys.append(key)
-        if len(keys) == 0:
-            key = process_key(str)
-            if key != u'':
-                keys.append(key)
-        return keys
-    except:
-        #import traceback
-        #traceback.print_exc()
-        pass
-
-#for str in simplesplit('第二卷　横尸亿万　第九十八章'):
-#    print str
-
 def docsplit(doc):
-    doclist = doc.split('.')
+    encoding = chardet.detect(doc)
+    if encoding['encoding']:
+        doc = unicode(doc, encoding['encoding'])
+    else:
+        doc = unicode(doc, 'utf-8')
+
+    doclist = doc.split(u'.')
 
     def sub(doc_list, ch):
         _list = []
@@ -147,11 +177,21 @@ def docsplit(doc):
     for ch in [u',', u';', u'，', u'。']:
         doclist = sub(doclist, ch)
 
-    return doclist
+    words = []
+    for str in doclist:
+        words.append(str.encode('utf-8', 'ignore'))
+
+    return words
 
 keykorks = [u"大灰狼",u"小白兔"]
 
 def splitbykeyworks(str):
+    encoding = chardet.detect(str)
+    if encoding['encoding']:
+        str = unicode(str, encoding['encoding'])
+    else:
+        str = unicode(str, 'utf-8')
+
     strlist = [str]
     for word in keykorks:
         words = []
@@ -164,6 +204,10 @@ def splitbykeyworks(str):
                     words.append(word)
         strlist = words
 
+    words = []
+    for str in strlist:
+        words.append(str.encode('utf-8', 'ignore'))
+
     return strlist
 
 dec1 = [u'是',u'乃']
@@ -171,12 +215,17 @@ dec2 = [u'不是']
 dec1filte = [u'不是',u'是的']
 
 def splitbydec(str):
+    encoding = chardet.detect(str)
+    if encoding['encoding']:
+        str = unicode(str, encoding['encoding'])
+    else:
+        str = unicode(str, 'utf-8')
     words = []
 
     strdoc = str.split(dec2[0]);
 
     for str in strdoc:
-        tmp = u""
+        tmp = ""
         index = 0
         for i in range(len(str)):
             ch = str[i]
@@ -192,7 +241,7 @@ def splitbydec(str):
                 index = i+1
                 tmp = u""
         if tmp != u"":
-            words.append(tmp)
+            words.append(tmp.encode('utf-8', 'ignore'))
     return words
 
 classifier = [u'匹',u'张',u'座',u'回',u'场',u'尾',u'条',u'个',u'首',u'阙',u'阵',u'网',u'炮',u'顶',u'丘',u'棵',
@@ -206,10 +255,16 @@ classifier = [u'匹',u'张',u'座',u'回',u'场',u'尾',u'条',u'个',u'首',u'�
               u'周',u'天',u'秒',u'分',u'旬',u'纪',u'岁',u'世',u'更',u'夜',u'春',u'夏',u'秋',u'冬',u'代',u'伏',
               u'辈',u'丸',u'泡',u'粒',u'颗',u'幢',u'堆']
 
-numlist = [u'一',u'二',u'三',u'四',u'五',u'六',u'七',u'八',u'九',u'十',u'百',u'千',u'万',u'亿',u'兆','1',u'2'
+numlist = [u'一',u'二',u'三',u'四',u'五',u'六',u'七',u'八',u'九',u'十',u'百',u'千',u'万',u'亿',u'兆',u'1',u'2'
            u'3',u'4',u'5',u'6',u'7',u'8',u'9',u'0',u'壹',u'壹',u'贰',u'贰',u'叁',u'肆',u'肆',u'伍',u'伍',u'陆',u'柒',u'捌',u'玖',u'拾',u'佰',u'仟']
 
 def splitbyclassifier(str):
+    encoding = chardet.detect(str)
+    if encoding['encoding']:
+        str = unicode(str, encoding['encoding'])
+    else:
+        str = unicode(str, 'utf-8')
+
     words = []
 
     tmp = u""
@@ -222,11 +277,11 @@ def splitbyclassifier(str):
                     if tmp[i] not in numlist:
                         words.append(tmp[0:i+1])
                         words.append(tmp[i+1:])
-                        tmp = u""
+                        tmp = ""
                         break
         old = ch
     if tmp != u"":
-        words.append(tmp)
+        words.append(tmp.encode('utf-8', 'ignore'))
     return words
 
 def specialword(str):
@@ -239,42 +294,40 @@ def specialword(str):
 adjective = [u'的',u'地',u'得']
 adjectivefilte = [u'大地',u'地面',u'地表',u'地底',u'地暖',u'地光',u'地气',u'地平线',u'地藏王',u'地广人稀',u'地大物博']
 
-def splitbyadjective(str):
+def splitbyadjective(str1):
+    encoding = chardet.detect(str1)
+    if encoding['encoding']:
+        str1 = unicode(str1, encoding['encoding'])
+    else:
+        str1 = unicode(str1, 'utf-8')
+
     words = []
 
-    tmp = u""
+    tmp = ""
     index = 0
-    for i in range(len(str)):
-        ch = str[i]
+    for i in range(len(str1)):
+        ch = str1[i]
         tmp += ch
         if ch == u'地':
-            if str[i-1:i+1] == adjectivefilte[0]:
+            if str1[i-1:i+1] == adjectivefilte[0]:
                 continue
-            if str[i:i+2] in adjectivefilte[1:7]:
+            if str1[i:i+2] in adjectivefilte[1:7]:
                 continue
-            if str[i:i+3] in adjectivefilte[7:9]:
+            if str1[i:i+3] in adjectivefilte[7:9]:
                 continue
-            if str[i:i+4] in adjectivefilte[9:]:
+            if str1[i:i+4] in adjectivefilte[9:]:
                 continue
 
         if ch in adjective:
-            words.append(str[index:i+1])
+            words.append(str1[index:i+1])
             index = i+1
             tmp = u""
     if tmp != u"":
-        words.append(tmp)
+        words.append(tmp.encode('utf-8', 'ignore'))
 
     return words
 
-#print vaguesplit("12345 6789 0976 423878")
-
 def lex(doc):
-    encoding = chardet.detect(doc)
-    if encoding['encoding']:
-        doc = unicode(doc, encoding['encoding'])
-    else:
-        doc = unicode(doc, 'utf-8')
-
     keywords = []
 
     doclist = docsplit(doc)
@@ -288,21 +341,15 @@ def lex(doc):
         except:
             return strlist
 
-    doclist = splitlistbylambda(doclist, simlesplit1)
+    doclist = splitlistbylambda(doclist, simplesplit)
     doclist = splitlistbylambda(doclist, splitbykeyworks)
     doclist = splitlistbylambda(doclist, splitbydec)
     doclist = splitlistbylambda(doclist, splitbyclassifier)
     doclist = splitlistbylambda(doclist, splitbyadjective)
     keywords.extend(doclist)
 
-    #doclistv = vaguesplit(doc)
-    #keywords.extend(doclistv)
-
     for key in keywords:
         if inviald_key(key):
             del key
 
     return keywords
-
-#for str in lex("中国是一个伟大的古老的地大物博的国家"):
-#    print str

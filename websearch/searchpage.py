@@ -94,13 +94,12 @@ def layout():
     p.add_page_route('/')
 
     cb = pycontainer('cb', pyhtmlstyle.float_left, p)
-    cb.set_size(1000, 0)
+    cb.set_size(980, 0)
     cb.set_location(0, 0)
 
     mj = pycontainer('mj', pyhtmlstyle.float_left, p)
-    #mj.set_location(1110, 1)
     mj.top = 60
-    mj.left = 70
+    mj.left = 130
     mj.set_size(400, 0)
 
     pnotes = pytext("Abelkhan", "notes123", pyhtmlstyle.margin_auto, mj)

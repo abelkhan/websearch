@@ -11,7 +11,6 @@ import globalv
 
 def on_get_check(p):
 	num,text = random_check()
-	print pysession.session
 	csession = pysession.session[p["sid"]]
 	csession["login_check"] = num
 	return {"check":text}
@@ -22,12 +21,10 @@ def on_check(p):
 	key = p["key"]
 	csession = pysession.session[p["sid"]]
 	if not check_num(csession["login_check"], int(text)):
-		print "checkend", csession["login_check"], text
 		return {"checkend":False}
 
 	c = find_user(name)
 	if (c == None):
-		print "userisnotdefine"
 		return {"userisnotdefine":True}
 
 	return {"loginend":longin_user(c, name, key)}
@@ -36,14 +33,15 @@ def on_register(p):
 	text = p["checktext"]
 	name = p["name"]
 	key = p["key"]
+	mail = p['mail']
 	csession = pysession.session[p["sid"]]
-	print type(csession["login_check"]), type(text)
 	if not check_num(csession["login_check"], int(text)):
 		return {"checkend":False}
-	print "check true", csession["login_check"], text
 
-	regend = register_user(name, key)
-	print regend
+	if not unregister_mail(mail):
+		return {"mail":False}
+
+	regend = register_user(name, key, mail)
 
 	return {"registerend":regend}
 
@@ -240,26 +238,9 @@ def rgisterui(p):
 	onsev = on_server_response()
 	sev = server_event("register", params, onsev)
 	sev.add_onevent(on_register)
+	onsev.add_call_if_true(msgbox("注册成功"), "registerend")
 	onsev.add_call_if_true(pop.close_win(), "registerend")
-
-	popnotes = pypopup("popnotes", 400, p)
-	pclose = pytext("×", "closeui1", pyhtmlstyle.float_right, popnotes)
-	pclose.top = 5
-	pclose.right = 5
-	evunselectclose = uievent(globalv.urlname, pclose, pyelement.onmouseout)
-	evunselectclose.add_call_ui(pclose.pop_set_cursor(pyhtmlstyle.auto))
-	pclose.register_uievent(evunselectclose)
-	evselectclose = uievent(globalv.urlname, pclose, pyelement.onmouseover)
-	evselectclose.add_call_ui(pclose.pop_set_cursor(pyhtmlstyle.pointer))
-	pclose.register_uievent(evselectclose)
-	evclose = uievent(globalv.urlname, pclose, pyelement.onclick)
-	evclose.add_call_ui(popnotes.close_win())
-	pclose.register_uievent(evclose)
-	ptitle = pytext("用户注册", "userregister1", pyhtmlstyle.float_left, popnotes)
-	ptitle.left = 5
-	ptitle.top = 5
-	ptitle.bottom = 5
-
+	onsev.add_call_if_false(msgbox("邮箱已被注册"), "mail")
 	onsev.add_call_if_false(msgbox("校验码错误"), "checkend")
 	onsev.add_call_if_false(msgbox("用户已被注册"), "registerend")
 	evlogin.add_server_event(sev)
@@ -403,6 +384,7 @@ def loginui(p, title1, title2):
 	onsev.add_call_if_true(pop.close_win(), "loginend")
 	onsev.add_call_if_true(title1.server_set_visible(False), "loginend")
 	onsev.add_call_if_true(title2.server_set_visible(False), "loginend")
+	onsev.add_call_if_true(msgbox("登录成功"), "loginend")
 	onsev.add_call_if_false(msgbox("校验码错误"), "checkend")
 	onsev.add_call_if_true(msgbox("不存在的用户"), "userisnotdefine")
 	onsev.add_call_if_false(msgbox("密码错误"), "loginend")

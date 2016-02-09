@@ -5,7 +5,7 @@
 
 import sys
 reload(sys)
-sys.setdefaultencoding('utf8')
+sys.setdefaultencoding('utf-8')
 
 import urllib2
 import cookielib
@@ -113,30 +113,46 @@ class htmlprocess(HTMLParser.HTMLParser):
             for name,value in attrs:
                 if name == 'content':
                     if self.style == 'keywords':
-                        self.keywords = doclex.simplesplit(value)
+                        keywords = doclex.simplesplit(value)
+                        for key in keywords:
+                            self.keywords.append((key, 1))
                     elif self.style == 'profile':
                         self.profile = value
 
     def handle_data(self, data):
         if self.current_tag == 'title':
-            keys = doclex.lex(data)
-            if isinstance(keys, list) and len(keys) > 0:
-                for key in keys:
-                    self.keywords.append(key)
-            data = doclex.delspace(data)
-            if len(data) > 0:
-                self.title = data
+            try:
+                data = doclex.delspace(data)
+                keys = doclex.lex(data)
+                if isinstance(keys, list) and len(keys) > 0:
+                    for key in keys:
+                        self.keywords.append((key, 2))
+                if len(data) > 0:
+                    self.title = data
+            except:
+                import traceback
+                traceback.print_exc()
         elif self.current_tag == 'a':
-            keys = doclex.simplesplit(data)
-            if isinstance(keys, list) and len(keys) > 0:
-                for key in keys:
-                    if not self.key_url.has_key(key):
-                        self.key_url[key] = []
-                    if self.link_url != self.url and judged_url(self.link_url):
-                        self.key_url[key].append(self.link_url)
+            try:
+                data = doclex.delspace(data)
+                keys = doclex.simplesplit(data)
+                if isinstance(keys, list) and len(keys) > 0:
+                    for key in keys:
+                        if not self.key_url.has_key(key):
+                            self.key_url[key] = []
+                        if self.link_url != self.url and judged_url(self.link_url):
+                            self.key_url[key].append(self.link_url)
+            except:
+                import traceback
+                traceback.print_exc()
         else:
             if self.current_tag == 'p' or self.current_tag == 'div':
-                self.data.append(data)
+                try:
+                    data = doclex.delspace(data)
+                    self.data.append(data)
+                except:
+                    import traceback
+                    traceback.print_exc()
 
 def get_page(url):
     try:
@@ -157,7 +173,6 @@ def get_page(url):
     except:
         import traceback
         traceback.print_exc()
-        print 'get_page error', url
 
 process_url_list = []
 
@@ -188,35 +203,66 @@ def process_url(url):
         encodingdate = chardet.detect(headers['date'])
         date = unicode(headers['date'], encodingdate['encoding'])
 
-        encodingdate = chardet.detect(title)
-        if encodingdate['encoding']:
-            title = unicode(title, encodingdate['encoding'])
-        else:
-            title = unicode(title, 'utf-8')
         try:
-            if profile != '':
-                encoding = chardet.detect(profile)
-                if encoding['encoding'] is None:
-                    try:
-                        profile = unicode(profile, "utf-8")
-                    except:
-                        profile = unicode(profile, "ascii")
-                else:
-                    profile = unicode(profile, encoding['encoding'])
+            if doclex.isinviald(profile):
+                profile = url_profile
+                if not doclex.isinviald(profile):
+                    encoding = chardet.detect(profile)
+                    if encoding['encoding'] is None:
+                        try:
+                            profile = unicode(profile, "utf-8")
+                        except:
+                            profile = unicode(profile, "ascii")
+                        finally:
+                            import traceback
+                            traceback.print_exc()
+                    else:
+                        profile = unicode(profile, encoding['encoding'])
+            if doclex.isinviald(title):
+                lent = 10
+                if len(profile) < 10:
+                    lent = len(profile)
+                title = profile[0: lent] + "..."
+            encodingdate = chardet.detect(title)
+            if encodingdate['encoding']:
+                title = unicode(title, encodingdate['encoding'])
+            else:
+                title = unicode(title, 'utf-8')
+
+            title = title.encode('utf-8', 'ignore')
+            profile = profile.encode('utf-8', 'ignore')
+
+            title = doclex.delspace(title)
+            profile = doclex.delspace(profile)
+
+            if not doclex.isinviald(profile):
                 collection_url_profile.update({'key':url} , {'key':url, 'urlprofile':profile, 'timetmp':time.time(), 'date':date, 'title':title}, True)
             else:
-                collection_url_profile.update({'key':url} , {'key':url, 'urlprofile':title, 'timetmp':time.time(), 'date':date, 'title':title}, True)
+                if not doclex.isinviald(title):
+                    collection_url_profile.update({'key':url} , {'key':url, 'urlprofile':title, 'timetmp':time.time(), 'date':date, 'title':title}, True)
         except:
-            collection_url_profile.update({'key':url} , {'key':url, 'urlprofile':title, 'timetmp':time.time(), 'date':date, 'title':title}, True)
+            import traceback
+            traceback.print_exc()
 
         for key1 in keywords:
             key = ""
-            for c in key1:
+            for c in key1[0]:
                 if c >= 'A' and c <= 'Z':
                     c = c.lower()
                 key += c
-            collection.update({'key':key, 'url':url}, {'$set':{'key':key, 'url':url, 'timetmp':time.time()}}, True)
-
+            try:
+                if isinstance(key, str):
+                    encodingdate = chardet.detect(key)
+                    if encodingdate['encoding']:
+                        key = unicode(key, encodingdate['encoding'])
+                    else:
+                        key = unicode(key, 'utf-8')
+                elif isinstance(key, unicode):
+                    key = key.encode("utf-8")
+                collection.update({'key':key, 'url':url}, {'$set':{'key':key, 'url':url, 'timetmp':time.time(), 'weight':key1[1]}}, True)
+            except:
+                import traceback
+                traceback.print_exc()
     except:
         import traceback
         traceback.print_exc()
@@ -252,12 +298,19 @@ def process_page(url, data):
                 url_profile += data
                 keys = doclex.simplesplit(data)
                 if isinstance(keys, list) and len(keys) > 0:
-                    keywords.extend(keys)
+                    for key in keys:
+                        keywords.append((key, 3))
             else:
                 if len(data) > 100:
                     url_profile += data[0:len(data) if len(data) < 100 else 100] + "..."
                 keys1 = doclex.lex(data)
-                keywords.extend(keys1)
+                for key in keys1:
+                    keywords.append((key, 3))
+
+        keys = doclex.simplesplit(url)
+        if isinstance(keys, list) and len(keys) > 0:
+            for key in keys:
+                keywords.append((key, 1))
 
         return htmlp.link, url_profile, keywords, htmlp.profile, key_url, htmlp.title
 
@@ -265,4 +318,3 @@ def process_page(url, data):
         import traceback
         traceback.print_exc()
 
-#process_link(url)
