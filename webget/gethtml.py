@@ -114,8 +114,9 @@ class htmlprocess(HTMLParser.HTMLParser):
                 if name == 'content':
                     if self.style == 'keywords':
                         keywords = doclex.simplesplit(value)
-                        for key in keywords:
-                            self.keywords.append((key, 1))
+                        if isinstance(keywords, list):
+                            for key in keywords:
+                                self.keywords.append((key, 1))
                     elif self.style == 'profile':
                         self.profile = value
 

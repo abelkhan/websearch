@@ -208,7 +208,7 @@ def splitbykeyworks(str):
     for str in strlist:
         words.append(str.encode('utf-8', 'ignore'))
 
-    return strlist
+    return words
 
 dec1 = [u'是',u'乃']
 dec2 = [u'不是']
@@ -237,7 +237,7 @@ def splitbydec(str):
                     continue
 
             if ch in dec1:
-                words.append(str[index:i+1])
+                words.append(str[index:i+1].encode('utf-8', 'ignore'))
                 index = i+1
                 tmp = u""
         if tmp != u"":
@@ -328,28 +328,32 @@ def splitbyadjective(str1):
     return words
 
 def lex(doc):
-    keywords = []
+    try:
+        keywords = []
 
-    doclist = docsplit(doc)
+        doclist = docsplit(doc)
 
-    def splitlistbylambda(strlist, fn):
-        try:
-            ret = []
-            for str in strlist:
-                ret.extend(fn(str))
-            return ret
-        except:
-            return strlist
+        def splitlistbylambda(strlist, fn):
+            try:
+                ret = []
+                for str in strlist:
+                    ret.extend(fn(str))
+                return ret
+            except:
+                return strlist
 
-    doclist = splitlistbylambda(doclist, simplesplit)
-    doclist = splitlistbylambda(doclist, splitbykeyworks)
-    doclist = splitlistbylambda(doclist, splitbydec)
-    doclist = splitlistbylambda(doclist, splitbyclassifier)
-    doclist = splitlistbylambda(doclist, splitbyadjective)
-    keywords.extend(doclist)
+        doclist = splitlistbylambda(doclist, simplesplit)
+        doclist = splitlistbylambda(doclist, splitbykeyworks)
+        doclist = splitlistbylambda(doclist, splitbydec)
+        doclist = splitlistbylambda(doclist, splitbyclassifier)
+        doclist = splitlistbylambda(doclist, splitbyadjective)
+        keywords.extend(doclist)
 
-    for key in keywords:
-        if inviald_key(key):
-            del key
+        for key in keywords:
+            if inviald_key(key):
+                del key
 
-    return keywords
+        return keywords
+    except:
+        import traceback
+        traceback.print_exc()
