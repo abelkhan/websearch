@@ -28,23 +28,23 @@ def delspace(str):
     encoding = chardet.detect(str)
     if encoding['encoding']:
         str = unicode(str, encoding['encoding'])
-    else:
-        str = unicode(str, 'utf-8')
 
-    i = 0
-    while True:
-        if i >= len(str):
-            break
+        i = 0
+        while True:
+            if i >= len(str):
+                break
 
-        if str[i] == u' ' or str[i] == u'\n' or str[i] == u'\r' or str[i] == u' ' or str[i] == u'\t' or str[i] == u'\0':
-            if i == 0 or str[i-1] == u' ':
-                str = str[0:i] + str[i+1:]
-                continue
+            if str[i] == u' ' or str[i] == u'\n' or str[i] == u'\r' or str[i] == u' ' or str[i] == u'\t' or str[i] == u'\0':
+                if i == 0 or str[i-1] == u' ':
+                    str = str[0:i] + str[i+1:]
+                    continue
 
-        if i < len(str):
-            i += 1
+            if i < len(str):
+                i += 1
 
-    return str.encode('utf-8', 'ignore')
+        str = str.encode('utf-8', 'ignore')
+
+    return str
 
 def splityspace(keys):
     return keys.split(' ')
@@ -53,20 +53,33 @@ punctuations = [u'.',u',',u'[',u']',u'{',u'}',u'"',u'\'',u';',u':',u'<',u'>',u'!
                 u'，',u'》',u'。',u'《',u'？',u'/',u'：',u'；',u'“',u'‘',u'{',u'}',u'、',u'|',u'\r',u'\n',u'\0',u'\t',u' ',u'   ',u'+',u'-',u'=',u'_',u'【', u'】',
                 u'　', u'★',u'　',u'！',u'·']
 
+numlist = [u'1', u'2', u'3', u'4', u'5', u'6', u'7', u'8', u'9', u'0']
+
+def invialddata(data):
+    encoding = chardet.detect(data)
+    if encoding['encoding']:
+        udata = unicode(data, encoding['encoding'])
+
+        for ch in udata:
+            if ch not in punctuations and ch not in numlist:
+                return False
+
+    return True
+
+
 def isinviald(str):
     encoding = chardet.detect(str)
     if encoding['encoding']:
         str = unicode(str, encoding['encoding'])
-    else:
-        str = unicode(str, 'utf-8')
 
-    for c in str:
-        if c not in punctuations:
-            return False
-    if str == u'':
-        return True
+        for c in str:
+            if c not in punctuations:
+                return False
 
-    str = str.encode('utf-8', 'ignore')
+        if str == u'':
+            return True
+
+        str = str.encode('utf-8', 'ignore')
 
     return True
 
@@ -91,59 +104,47 @@ def vaguesplit(str):
     encoding = chardet.detect(str)
     if encoding['encoding']:
         str = unicode(str, encoding['encoding'])
+
+        words = []
+        for i in range(len(str)):
+            if str[i] not in punctuations:
+                words.append(str[i])
+
+        for i in range(len(str)):
+            if i < len(str) - 1 and str[i] not in punctuations and str[i+1] not in punctuations:
+                words.append(str[i:i+2])
+
+        for i in range(len(str)):
+            if i < len(str) - 2 and str[i] not in punctuations and str[i+1] not in punctuations and str[i+2] not in punctuations:
+                words.append(str[i:i+3])
+
+        for i in range(len(str)):
+            if i < len(str) - 3 and str[i] not in punctuations and str[i+1] not in punctuations and str[i+2] not in punctuations and str[i+3] not in punctuations:
+                words.append(str[i:i+4])
+
+        doclist = []
+        for str in words:
+            doclist.append(str.encode('utf-8', 'ignore'))
+
+        return doclist
     else:
-        str = unicode(str, 'utf-8')
-
-    words = []
-    for i in range(len(str)):
-        if str[i] not in punctuations:
-            words.append(str[i])
-
-    for i in range(len(str)):
-        if i < len(str) - 1 and str[i] not in punctuations and str[i+1] not in punctuations:
-            words.append(str[i:i+2])
-
-    for i in range(len(str)):
-        if i < len(str) - 2 and str[i] not in punctuations and str[i+1] not in punctuations and str[i+2] not in punctuations:
-            words.append(str[i:i+3])
-
-    for i in range(len(str)):
-        if i < len(str) - 3 and str[i] not in punctuations and str[i+1] not in punctuations and str[i+2] not in punctuations and str[i+3] not in punctuations:
-            words.append(str[i:i+4])
-
-    doclist = []
-    for str in words:
-        doclist.append(str.encode('utf-8', 'ignore'))
-
-    return doclist
+        return [str]
 
 def simplesplit(str):
     try:
         encoding = chardet.detect(str)
         if encoding['encoding']:
             str = unicode(str, encoding['encoding'])
-        else:
-            str = unicode(str, 'utf-8')
 
-        keys = []
-        key = u''
-        for ch in str:
-            if ch in punctuations:
-                if not inviald_key(key):
-                    keys.append(key)
-                    key = u''
-            else:
-                key += ch
-        if key != u'':
-            keys.append(key)
-
-        words = []
-        for key in keys:
-            words.append(key.encode('utf-8', 'ignore'))
-        keys = words
-
-        if len(keys) == 0:
-            key = process_key(str)
+            keys = []
+            key = u''
+            for ch in str:
+                if ch in punctuations:
+                    if not inviald_key(key):
+                        keys.append(key)
+                        key = u''
+                else:
+                    key += ch
             if key != u'':
                 keys.append(key)
 
@@ -152,9 +153,22 @@ def simplesplit(str):
                 words.append(key.encode('utf-8', 'ignore'))
             keys = words
 
-            keys.extend(vaguesplit(key.encode('utf-8', 'ignore')))
+            if len(keys) == 0:
+                key = process_key(str)
+                if key != u'':
+                    keys.append(key.encode('utf-8', 'ignore'))
 
-        return keys
+            words = []
+            for key in keys:
+                if isinstance(key, unicode):
+                    key = key.encode('utf-8')
+                words.append(key)
+
+            return words
+
+        else:
+            return [str]
+
     except:
         import traceback
         traceback.print_exc()
@@ -353,7 +367,13 @@ def lex(doc):
             if inviald_key(key):
                 del key
 
-        return keywords
+        words = []
+        for key in keywords:
+            if isinstance(key, unicode):
+                key = key.encode('utf-8')
+            words.append(key)
+
+        return words
     except:
         import traceback
         traceback.print_exc()
