@@ -17,6 +17,7 @@ from webanalysis import webanalysis
 collection_key = None
 
 urllist = ["http://www.xitek.com",
+           "http://www.17173.com/",
            "http://www.zol.com.cn",
            "http://www.weiqiok.com",
            "http://www.cnblogs.com",

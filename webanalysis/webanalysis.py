@@ -28,7 +28,7 @@ def get_page(url):
         cookie_jar = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
         req = urllib2.Request(url = url, headers = headers)
-        response = opener.open(req)
+        response = opener.open(req, timeout = 5)
         the_page = response.read()
         headers = response.info()
 
@@ -78,9 +78,11 @@ def process_url(urlinfo):
                 profile = urlinfo['profile']['2'][0]
 
         if title != "" and profile != "":
+            encodingdate = chardet.detect(title)
+            title = unicode(title, encodingdate['encoding'])
             encodingdate = chardet.detect(profile)
             profile = unicode(profile, encodingdate['encoding'])
-            collection_url_profile.update({'key':url} , {'key':url, 'urlprofile':profile.encode('utf-8'), 'timetmp':time.time(), 'date':date, 'title':title}, True)
+            collection_url_profile.update({'key':url} , {'key':url, 'urlprofile':profile.encode('utf-8'), 'timetmp':time.time(), 'date':date, 'title':title.encode('utf-8')}, True)
 
         for w in ['1', '2', '3']:
             keywords = urlinfo['keys'][w]
@@ -95,8 +97,8 @@ def process_url(urlinfo):
             urlinfolist[key] = {}
 
     except:
-            import traceback
-            traceback.print_exc()
+        import traceback
+        traceback.print_exc()
 
 def seach(urllist):
     processed_url_list = []

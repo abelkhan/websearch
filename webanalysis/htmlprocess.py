@@ -30,6 +30,10 @@ class htmlprocess(HTMLParser.HTMLParser):
         self.urlinfo = urlinfo
         self.current_url = urlinfo['url']
 
+        keywords = doclex.simplesplit(self.current_url)
+        for key in keywords:
+            self.urlinfo['keys']['1'].append(key)
+
         self.current_tag = ""
         self.style = ""
 
@@ -57,11 +61,14 @@ class htmlprocess(HTMLParser.HTMLParser):
                         self.urlinfo['profile']['0'] = value
 
                     encodingdate = chardet.detect(value)
-                    udata = unicode(value, encodingdate['encoding'])
-                    tlen = 16
-                    if len(udata) < 16:
-                        tlen = len(udata)
-                    self.urlinfo['titlegen'].append(udata[0:tlen].encode('utf-8'))
+                    if encodingdate['encoding']:
+                        udata = unicode(value, encodingdate['encoding'])
+                        tlen = 16
+                        if len(udata) < 16:
+                            tlen = len(udata)
+                        self.urlinfo['titlegen'].append(udata[0:tlen].encode('utf-8'))
+                    else:
+                        self.urlinfo['titlegen'].append(value)
 
         if tag == 'a':
             self.sub_url = ""
